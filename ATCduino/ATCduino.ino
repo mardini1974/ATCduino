@@ -67,10 +67,10 @@ void pciSetup(byte pin)
 }
 
 void setup() { 
-  pinMode(encoder0PinA, INPUT); 
-  pinMode(encoder0PinB, INPUT);
-  pinMode(homeSensor, INPUT);
-  pinMode(enableRunPin, INPUT);  
+  pinMode(encoder0PinA, INPUT_PULLUP); 
+  pinMode(encoder0PinB, INPUT_PULLUP);
+  pinMode(homeSensor, INPUT_PULLUP);
+  pinMode(enableRunPin, INPUT_PULLUP);  
   pciSetup(encoder0PinB);
   attachInterrupt(0, encoderInt, CHANGE);  // encoder pin on interrupt 0 - pin 2
   attachInterrupt(1, countStep      , RISING);  // step  input on interrupt 1 - pin 3
@@ -149,7 +149,7 @@ void process_line() {
   case '!': Serial.println ("ATC");break;
   case 'F': Serial.println (firmware);break;
   case 'T': Serial.println(digitalRead(homeSensor));break;
-  case 'U': Serial.print(kp);Serial.print(",");Serial.print(ki);Serial.print(",");Serial.print(kd);Serial.print(",");Serial.print(abs(target1-encoder0Pos)<inPostionLimit);Serial.print(",");Serial.print(station);Serial.print(",");Serial.println(digitalRead (enableRunPin));break;
+  case 'U': Serial.print(abs(target1-encoder0Pos)<inPostionLimit);Serial.print(",");Serial.print(station);Serial.print(",");Serial.println(digitalRead (enableRunPin));break;
   //default : Serial.println ("not a command"); break;
  }
  if (!parsing)  while((Serial.read()!=10));parsing = false; // dump extra characters till LF is seen (you can use CRLF or just LF)

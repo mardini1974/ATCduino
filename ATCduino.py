@@ -24,6 +24,7 @@ def serial_ports():
 c= hal.component("ATCduino")
 
 ser =serial.Serial(serial_ports()[0],115200)
+ser.readline()
 c.newpin("piston",hal.HAL_BIT,hal.HAL_IN)
 c.newpin("home",hal.HAL_BIT,hal.HAL_IN)
 c.newpin("inposition",hal.HAL_BIT,hal.HAL_OUT)
@@ -49,14 +50,15 @@ time.sleep(1)
 c.ready()
 try:
     while 1:
-        time.sleep(0.1)
         ser.write ('U\r\n')
+        time.sleep(0.1)
+
         message= ser.readline()
-        #print message
-        p,i,d,inpos,station,enabled = message.split(",")
-        c['PID.P'] = float(p)
-        c['PID.I'] = float(i)
-        c['PID.D'] = float(d)
+        print message
+        inpos,station,enabled = message.split(",")
+        #c['PID.P'] = float(p)
+        #c['PID.I'] = float(i)
+        #c['PID.D'] = float(d)
         c['inposition'] = True if inpos.rstrip('\r\n') == "1"  else False
         c['station'] = float(station)
         c['Enabled'] = False if enabled.rstrip('\r\n') == "0"  else True
