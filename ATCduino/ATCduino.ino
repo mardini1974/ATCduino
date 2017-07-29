@@ -1,4 +1,10 @@
-
+/* This program is based on misan dcservo https://github.com/misan/dcservo 
+ *  the original structrure of the program is not changed nut it's adapted 
+ *  to the needs of my application.
+ *  Some extra commands added to serial communication, and some are deleted
+ *  
+ */
+ 
 /* This one is not using any PinChangeInterrupt library */
 
 /*
@@ -84,7 +90,7 @@ void loop(){
     setpoint=target1;
     
     if(Serial.available()) process_line(); // it may induce a glitch to move motion, so use it sparingly 
-    if (!homing) {if(digitalRead (enableRunPin)== LOW ) {myPID.SetMode(AUTOMATIC);myPID.Compute();} else {target1=encoder0Pos;myPID.SetMode(MANUAL);myPID.ComputeM(0);};};
+    if (!homing) {if(digitalRead (enableRunPin)== HIGH ) {myPID.SetMode(AUTOMATIC);myPID.Compute();} else {target1=encoder0Pos;myPID.SetMode(MANUAL);myPID.ComputeM(0);};};
     //while(myPID.Compute()){ // wait till PID is actually computed
     pwmOut(output); 
     //if(auto1) if(millis() % 3000 == 0) target1=random(2000); // that was for self test with no input from main controller
@@ -127,9 +133,9 @@ void process_line() {
   case '?': printPos(); break;
   case 'X': target1=Serial.parseInt();  clearMem(300); break;
   //case 'T': auto1 = !auto1; break;
-  case 'A': auto2 = !auto2; break;
+  //case 'A': auto2 = !auto2; break;
   case 'Q': Serial.print("P="); Serial.print(kp); Serial.print(" I="); Serial.print(ki); Serial.print(" D="); Serial.println(kd); break;
-  case 'H': help(); break;
+  //case 'H': help(); break;
   case 'W': writetoEEPROM(); break;
   case 'K': eedump(); break;
   case 'R': recoverPIDfromEEPROM() ; break;
@@ -143,7 +149,7 @@ void process_line() {
   case '!': Serial.println ("ATC");break;
   case 'F': Serial.println (firmware);break;
   case 'T': Serial.println(digitalRead(homeSensor));break;
-  case 'U': Serial.print(kp);Serial.print(",");Serial.print(ki);Serial.print(",");Serial.print(kd);Serial.print(",");Serial.print((target1-encoder0Pos)<inPostionLimit);Serial.print(",");Serial.print(station);Serial.print(",");Serial.println(digitalRead (enableRunPin));break;
+  case 'U': Serial.print(kp);Serial.print(",");Serial.print(ki);Serial.print(",");Serial.print(kd);Serial.print(",");Serial.print(abs(target1-encoder0Pos)<inPostionLimit);Serial.print(",");Serial.print(station);Serial.print(",");Serial.println(digitalRead (enableRunPin));break;
   //default : Serial.println ("not a command"); break;
  }
  if (!parsing)  while((Serial.read()!=10));parsing = false; // dump extra characters till LF is seen (you can use CRLF or just LF)
@@ -206,6 +212,7 @@ void Reset() {encoder0Pos=0;target1=0;}
 void printPos() {
   Serial.print(F("Position=")); Serial.print(encoder0Pos); Serial.print(F(" PID_output=")); Serial.print(output); Serial.print(F(" Target=")); Serial.println(setpoint);
 }
+/*
 void help() {
  Serial.println(F("\nPID DC motor controller and stepper interface emulator"));
  Serial.println(F("by misan"));
@@ -221,7 +228,7 @@ void help() {
  Serial.println(F("H will print this help message again")); 
  Serial.println(F("A will toggle on/off showing regulator status every second\n")); 
 }
-
+*/
 void writetoEEPROM() { // keep PID set values in EEPROM so they are kept when arduino goes off
   eeput(kp,0);
   eeput(ki,4);
