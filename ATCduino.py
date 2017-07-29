@@ -24,15 +24,6 @@ def serial_ports():
 c= hal.component("ATCduino")
 
 ser =serial.Serial(serial_ports()[0],115200)
-# time.sleep(1)
-# print ser.readline()
-# ser.write ('!\r\n')
-# time.sleep(0.1)
-# print ser.readline()
-# ser.write ('f!\r\n')
-# time.sleep(0.1)
-print ser.readline()
-
 c.newpin("piston",hal.HAL_BIT,hal.HAL_IN)
 c.newpin("home",hal.HAL_BIT,hal.HAL_IN)
 c.newpin("inposition",hal.HAL_BIT,hal.HAL_OUT)
