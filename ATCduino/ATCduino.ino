@@ -25,7 +25,6 @@
 */
 #include <EEPROM.h>
 #include <PID_v1.h>
-#define SERIAL_BUFFER_SIZE 128
 #define encoder0PinA  2   // PD2; 
 #define encoder0PinB  8   // PC0;
 #define homeSensor    4   //
@@ -39,7 +38,7 @@
 #define firmware "0.1" // firmware version
 byte pos[500]; int p=0;
 
-double kp=3,ki=0,kd=0.0;
+double kp=37.0,ki=32.0,kd=0.57;
 double input=0, output=0, setpoint=0;
 PID myPID(&input, &output, &setpoint,kp,ki,kd, DIRECT);
 volatile long encoder0Pos = 0;
@@ -48,6 +47,7 @@ long previousMillis = 0;        // will store last time LED was updated
 
 long target1=0,station =0; // destination location at any moment
 bool homing =false;
+bool home_invert_read= true;
 bool searching =false;
 bool searching1 = false;
 //for motor control ramps 1.4
@@ -55,9 +55,11 @@ bool newStep = false;
 bool oldStep = false;
 bool dir = false;
 bool parsing = false;
+bool pistonCmd = false;
 byte skip=0;
 double Stations[maxStations];
-
+long foo=0;
+bool state,laststate;
 // Install Pin change interrupt for a pin, can be called multiple times
 void pciSetup(byte pin) 
 {
@@ -69,11 +71,12 @@ void pciSetup(byte pin)
 void setup() { 
   pinMode(encoder0PinA, INPUT_PULLUP); 
   pinMode(encoder0PinB, INPUT_PULLUP);
-  pinMode(homeSensor, INPUT_PULLUP);
-  pinMode(enableRunPin, INPUT_PULLUP);  
+  pinMode(homeSensor, INPUT);
+  pinMode(enableRunPin, INPUT);
+  pinMode (piston,OUTPUT);  
   pciSetup(encoder0PinB);
   attachInterrupt(0, encoderInt, CHANGE);  // encoder pin on interrupt 0 - pin 2
-  attachInterrupt(1, countStep      , RISING);  // step  input on interrupt 1 - pin 3
+  //attachInterrupt(1, countStep      , RISING);  // step  input on interrupt 1 - pin 3
   TCCR1B = TCCR1B & 0b11111000 | 1; // set 31Kh PWM
   Serial.begin (115200);
   //help();
@@ -86,11 +89,11 @@ void setup() {
 } 
 
 void loop(){
+    if (pistonCmd) digitalWrite (piston,LOW);else digitalWrite (piston,HIGH); 
     input = encoder0Pos; 
     setpoint=target1;
-    
     if(Serial.available()) process_line(); // it may induce a glitch to move motion, so use it sparingly 
-    if (!homing) {if(digitalRead (enableRunPin)== HIGH ) {myPID.SetMode(AUTOMATIC);myPID.Compute();} else {target1=encoder0Pos;myPID.SetMode(MANUAL);myPID.ComputeM(0);};};
+    if (!homing) {if(digitalRead (enableRunPin)== HIGH ) {myPID.SetMode(AUTOMATIC);myPID.Compute();} else { myPID.SetMode(MANUAL);myPID.ComputeM(0);};};
     //while(myPID.Compute()){ // wait till PID is actually computed
     pwmOut(output); 
     //if(auto1) if(millis() % 3000 == 0) target1=random(2000); // that was for self test with no input from main controller
@@ -125,31 +128,32 @@ void countStep(){ if (PINC&B0000001) target1--;else target1++; } // pin A0 repre
 
 void process_line() {
  char cmd = Serial.read();
+ long target = 0;
  if(cmd>'Z') cmd-=32;
  switch(cmd) {
   case 'P': kp=Serial.parseFloat(); myPID.SetTunings(kp,ki,kd); break;
   case 'D': kd=Serial.parseFloat(); myPID.SetTunings(kp,ki,kd); break;
   case 'I': ki=Serial.parseFloat(); myPID.SetTunings(kp,ki,kd); break;
   case '?': printPos(); break;
-  case 'X': target1=Serial.parseInt();  clearMem(300); break;
+  case 'X': target=Serial.parseInt(); if (0<=target && target<90000)target1 = target ; clearMem(300);Serial.print(abs(target1-encoder0Pos)<inPostionLimit);Serial.print(",");Serial.print(encoder0Pos);Serial.print(",");Serial.print(target1);Serial.print(",");Serial.println(digitalRead (enableRunPin));break;
   //case 'T': auto1 = !auto1; break;
   //case 'A': auto2 = !auto2; break;
-  case 'Q': Serial.print("P="); Serial.print(kp); Serial.print(" I="); Serial.print(ki); Serial.print(" D="); Serial.println(kd); break;
+  case 'Q': Serial.print("P="); Serial.print(kp); Serial.print(" I="); Serial.print(ki); Serial.print(" foo="); Serial.print(foo);Serial.print(" D="); Serial.println(kd); break;
   //case 'H': help(); break;
   case 'W': writetoEEPROM(); break;
   case 'K': eedump(); break;
   case 'R': recoverPIDfromEEPROM() ; break;
   case 'S': for(int i=0; i<p; i++) Serial.println(pos[i]); break;
-  case 'L': station = Serial.parseInt();target1= Stations[station-1]; clearMem(300); break;
+  //case 'L': station = Serial.parseInt();target1= Stations[station-1]; clearMem(300); break;
   case 'B': Reset();break;
   case 'M': homing=true;searching=true;break;
   case 'N': parsing = true;parselocations();break;
-  case 'O': if (abs(target1-encoder0Pos)<inPostionLimit) digitalWrite (piston,HIGH);break;
-  case 'J': digitalWrite (piston,LOW);break;
+  case 'O': if (abs(target1-encoder0Pos)<inPostionLimit) pistonCmd = true;Serial.println ("Piston On");break;
+  case 'J': pistonCmd = false ;Serial.println ("Piston Off");break;
   case '!': Serial.println ("ATC");break;
   case 'F': Serial.println (firmware);break;
   case 'T': Serial.println(digitalRead(homeSensor));break;
-  case 'U': Serial.print(abs(target1-encoder0Pos)<inPostionLimit);Serial.print(",");Serial.print(station);Serial.print(",");Serial.println(digitalRead (enableRunPin));break;
+  case 'U': Serial.print(abs(target1-encoder0Pos)<inPostionLimit);Serial.print(",");Serial.print(encoder0Pos);Serial.print(",");Serial.print(target1);Serial.print(",");Serial.println(digitalRead (enableRunPin));break;
   //default : Serial.println ("not a command"); break;
  }
  if (!parsing)  while((Serial.read()!=10));parsing = false; // dump extra characters till LF is seen (you can use CRLF or just LF)
@@ -192,12 +196,12 @@ while (command != 0)
 }
 void Homing(int HomeOffset)
 {
-  
+ int home_read = 1;
  if(searching) {
   myPID.SetMode(MANUAL);
   myPID.ComputeM(-100);
-  
-  if (digitalRead (homeSensor)== HIGH) {searching=false;searching1=true;encoder0Pos=0;target1 = HomeOffset;}}
+  if (home_invert_read) home_read = !digitalRead(homeSensor) ; else home_read= digitalRead(homeSensor);
+  if (home_read == HIGH) {searching=false;searching1=true;encoder0Pos=0;target1 = HomeOffset;}}
  if (searching1){
     
     myPID.SetMode(AUTOMATIC);myPID.Compute();

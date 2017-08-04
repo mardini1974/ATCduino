@@ -13,6 +13,21 @@
     <property name="can_focus">False</property>
     <property name="stock">gtk-go-forward</property>
   </object>
+  <object class="GtkAdjustment" id="PIDD">
+    <property name="upper">1</property>
+    <property name="step_increment">0.001</property>
+    <property name="page_increment">0.10000000000000001</property>
+  </object>
+  <object class="GtkAdjustment" id="PIDI">
+    <property name="upper">100</property>
+    <property name="step_increment">0.01</property>
+    <property name="page_increment">0.10000000000000001</property>
+  </object>
+  <object class="GtkAdjustment" id="PIDP">
+    <property name="upper">100</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">10</property>
+  </object>
   <object class="GtkAdjustment" id="Stations1">
     <property name="upper">100000</property>
     <property name="step_increment">1</property>
@@ -73,7 +88,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="xpad">9</property>
-                    <property name="label" translatable="yes">Jog increment </property>
+                    <property name="label" translatable="yes">PID.P</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -82,7 +97,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkSpinButton" id="spinbutton9">
+                  <object class="HAL_SpinButton" id="hal_spinbutton9">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="invisible_char">●</property>
@@ -90,6 +105,8 @@
                     <property name="secondary_icon_activatable">False</property>
                     <property name="primary_icon_sensitive">True</property>
                     <property name="secondary_icon_sensitive">True</property>
+                    <property name="adjustment">PIDP</property>
+                    <property name="digits">2</property>
                   </object>
                   <packing>
                     <property name="expand">True</property>
@@ -106,32 +123,33 @@
             </child>
             <child>
               <object class="GtkHBox" id="hbox2">
+                <property name="height_request">1</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <child>
-                  <object class="GtkButton" id="button1">
-                    <property name="label" translatable="yes">button</property>
+                  <object class="GtkLabel" id="label10">
                     <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">True</property>
-                    <property name="use_action_appearance">False</property>
-                    <property name="image">Backword</property>
+                    <property name="can_focus">False</property>
+                    <property name="xpad">9</property>
+                    <property name="label" translatable="yes">PID.I</property>
                   </object>
                   <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
                     <property name="position">0</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButton" id="button2">
-                    <property name="label" translatable="yes">Forward</property>
+                  <object class="HAL_SpinButton" id="hal_spinbutton10">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="receives_default">True</property>
-                    <property name="use_action_appearance">False</property>
-                    <property name="image">Forward</property>
-                    <property name="image_position">right</property>
+                    <property name="invisible_char">●</property>
+                    <property name="primary_icon_activatable">False</property>
+                    <property name="secondary_icon_activatable">False</property>
+                    <property name="primary_icon_sensitive">True</property>
+                    <property name="secondary_icon_sensitive">True</property>
+                    <property name="adjustment">PIDI</property>
+                    <property name="digits">2</property>
                   </object>
                   <packing>
                     <property name="expand">True</property>
@@ -147,7 +165,47 @@
               </packing>
             </child>
             <child>
-              <placeholder/>
+              <object class="GtkHBox" id="hbox4">
+                <property name="height_request">1</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <child>
+                  <object class="GtkLabel" id="label11">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="xpad">9</property>
+                    <property name="label" translatable="yes">PID.D</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="HAL_SpinButton" id="hal_spinbutton11">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="invisible_char">●</property>
+                    <property name="primary_icon_activatable">False</property>
+                    <property name="secondary_icon_activatable">False</property>
+                    <property name="primary_icon_sensitive">True</property>
+                    <property name="secondary_icon_sensitive">True</property>
+                    <property name="adjustment">PIDD</property>
+                    <property name="digits">3</property>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">2</property>
+              </packing>
             </child>
             <child>
               <placeholder/>

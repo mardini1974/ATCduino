@@ -17,6 +17,7 @@ def serial_ports():
             message= s.readline()
             if message.find('ATC')>-1:
                 result.append(port)
+                print ('Connecting')
             s.close()
 
         except (OSError, serial.SerialException):
@@ -34,6 +35,8 @@ c.newpin("home",hal.HAL_BIT,hal.HAL_IN)
 c.newpin("inposition",hal.HAL_BIT,hal.HAL_OUT)
 c.newpin("Enabled",hal.HAL_BIT,hal.HAL_IN)
 c.newpin("station",hal.HAL_FLOAT,hal.HAL_OUT)
+c.newpin("position",hal.HAL_FLOAT,hal.HAL_OUT)
+c.newpin("command",hal.HAL_FLOAT,hal.HAL_OUT)
 c.newpin("cmdstation",hal.HAL_FLOAT,hal.HAL_IN)
 c.newpin("stations.s1",hal.HAL_S32,hal.HAL_IN)
 c.newpin("stations.s2",hal.HAL_S32,hal.HAL_IN)
@@ -54,30 +57,37 @@ c.ready()
 #ser.writelines ('N5=33536:6=41920:7=50304:8=58688')
 #time.sleep(1)
 old_piston = False
-old_station = -1.0
+old_station = 0
 old_home = False
 inpos='0'
-station = '0'
+position = '0'
 enabled = '0'
+cmd = '0'
+retry = 0
+
 Stations = [0,0,0,0,0,0,0,0]
 try:
     while 1:
-        ser.write ('U\r\n')
+        # ser.write ('U\r\n')
+        ser.write("X%s\r\n" % Stations[int(c.cmdstation)])
         time.sleep(0.1)
         message= ser.readline()
         #print message
         try:
-            inpos,station,enabled = message.split(",")
-        except:
-            pass
+            inpos,position,cmd,enabled = message.split(",")
+
         #c['PID.P'] = float(p)
         #c['PID.I'] = float(i)
         #c['PID.D'] = float(d)
-        for i in range(0,8):
-            Stations[i] = c["stations.s%d"%(i+1)]
-        c['inposition'] = True if inpos.rstrip('\r\n') == "1"  else False
-        c['station'] = float(station)
-        c['Enabled'] = False if enabled.rstrip('\r\n') == "0"  else True
+            for i in range(0,8):
+                Stations[i] = c["stations.s%d"%(i+1)]
+            c['inposition'] = True if inpos.rstrip('\r\n') == "1"  else False
+            c['position']= float(position)
+            c['command']= float(cmd)
+            c['station'] = round(float(position)/8384,0)
+            c['Enabled'] = False if enabled.rstrip('\r\n') == "0"  else True
+        except:
+            pass
         #print inpos,station,enabled
         if c["piston"] !=  old_piston:
             if c.piston == True:
@@ -85,14 +95,19 @@ try:
             else:
                 ser.write("J\r\n")
             old_piston = c["piston"]
-        if c.cmdstation != old_station:
-            ser.write("X%s\r\n"%int(Stations[int(c.cmdstation)]))
-            print ("X%s\r\n"%int(Stations[int(c.cmdstation)]))
-            old_station = c.cmdstation
-        if c.home == True:
+
+        # if c.cmdstation != old_station:
+        #     print('%s , %s' % (c.cmdstation,old_station))
+        #     ser.write("X%s\r\n" % Stations[int(c.cmdstation)])
+        #     print ("X%s\r\n" % Stations[int(c.cmdstation)])
+        #     old_station = c.cmdstation
+
+        if c.home:
             ser.write("M\r\n")
             c.home= False
-except KeyboardInterrupt: pass
+except KeyboardInterrupt:
+    pass
+
 finally:
-    ser.close()
-    c.exit()
+    print ('ATC has been disconnected')
+    raise SystemExit
