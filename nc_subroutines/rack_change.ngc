@@ -1,0 +1,77 @@
+
+
+
+o<rack_change> sub
+;M73 (auto-restore modal settings on return)
+;(print, rack_change: loaded tool=#<_current_tool> current pocket: #<_current_pocket>)
+;(print, rack_change: selected tool=#<_selected_tool> selected pocket: #<_selected_pocket>)
+
+
+; unload previous tool
+o300 if [#<_current_tool> GT 0]
+	M68 E#<_ini[ATCPINS]cmdstation> Q#<_current_tool> ; move to selected pocket analog output 
+	G4 P2
+	;print, waiting in position
+	M66 P#<_ini[ATCPINS]inposition> L3 Q#<_ini[DWELL]turning_time_out>
+	o330 if [#5399 EQ -1]
+		;print position not reached
+			(DEBUG,Position not reached)
+		endsub [-1]; station not reached
+	o330 endif
+		;print,Move put tool
+     o<tool_put_move> call   
+		;print,Extend piston
+     M64 P#<_ini[ATCPINS]piston>  ;extend the piston to hold the tool
+		;print,Waiting
+     G4  P#<_ini[dwell]lock_time> 
+		;print,Unlock tool
+     M65 P#<_ini[ATCPINS]lock> ; open spindle tool holder
+		;print,Clear move
+     o<tool_holder_clear_move> call
+		;print,Wait to clear movement
+     G4 P#<_ini[dwell]mystery> ; unsure what this is for
+		;print,Retract piston
+     M65 P#<_ini[ATCPINS]piston>  ; retract piston to home position
+o300 endif 
+g4p2
+;print,wait piston to retract
+M66 P#<_ini[ATCPINS]enable> L3 Q#<_ini[DWELL]piston_time_out> ; Wait piston to return digital wait on input 
+o310 if [#5399 EQ -1]
+		;print,Piston time out
+		(DEBUG,Piston time out)
+		endsub [-1] ; piston locked can't return
+o310 endif 
+; go to new tool
+;print,Turing wheel
+M68 E#<_ini[ATCPINS]cmdstation> Q#<_selected_tool> ; move to selected pocket analog output 
+G4 P2
+;print, waiting in position
+M66 P#<_ini[ATCPINS]inposition> L3 Q#<_ini[DWELL]turning_time_out>
+o320 if [#5399 EQ -1]
+		;print position not reached
+		(DEBUG,Position not reached) 
+		endsub [-1]; station not reached
+o320 endif 	 
+;print,position reached
+M64 P #<_ini[ATCPINS]piston>  ;extend the piston to deliver the tool
+;print,extract piston
+G4 P1
+o<tool_get_move> call 
+;print,Get tool
+G4  P #<_ini[dwell]lock_time> 
+;print,Lock piston
+M64 P #<_ini[ATCPINS]lock> ; lock spindle tool holder
+;print,Wait
+G4 P #<_ini[dwell]mystery> ; unsure what this is for
+;print,Retract piston
+M65 P #<_ini[ATCPINS]piston>  ; retract piston to home position
+g4p0.5
+;print,Clear move
+o<tool_holder_clear_move> call
+;print,Succeed by returning a positive value
+
+
+
+
+o<rack_change> endsub [1]
+m2

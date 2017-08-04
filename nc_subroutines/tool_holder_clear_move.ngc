@@ -1,0 +1,6 @@
+; no parameters
+o<tool_holder_clear_move> sub
+	g53 g0 z0
+o<tool_holder_clear_move> endsub
+
+m2
