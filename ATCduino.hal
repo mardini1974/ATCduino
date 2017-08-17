@@ -2,7 +2,7 @@
 #        Load ATCduino.py          #
 ###################################################################
 
-loadusr -W ATCduino
+loadusr -Wn ATCduino ./ATCduino.py
 
 net ATCsignals.piston ATCduino.piston motion.digital-out-00
 net ATCsignals.Home ATCduino.home motion.digital-out-01

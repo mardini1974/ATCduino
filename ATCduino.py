@@ -49,6 +49,8 @@ c.newpin("stations.s8",hal.HAL_S32,hal.HAL_IN)
 c.newpin("PID.P",hal.HAL_FLOAT,hal.HAL_IN)
 c.newpin("PID.I",hal.HAL_FLOAT,hal.HAL_IN)
 c.newpin("PID.D",hal.HAL_FLOAT,hal.HAL_IN)
+c.newpin("HomeOffset",hal.HAL_S32,hal.HAL_IN)
+
 config = ConfigParser.ConfigParser()
 config.read('ATCduino.ini')
 c.ready()
@@ -103,7 +105,7 @@ try:
         #     old_station = c.cmdstation
 
         if c.home:
-            ser.write("M\r\n")
+            ser.write("M%d\r\n"%c["HomeOffset"])
             c.home= False
 except KeyboardInterrupt:
     pass
