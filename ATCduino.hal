@@ -10,3 +10,4 @@ net ATCsignals.Enable ATCduino.Enabled motion.digital-in-00
 net ATCsignals.inposition ATCduino.inposition motion.digital-in-01
 net ATCsignals.station ATCduino.station motion.analog-in-00
 net ATCsignals.cmdstation ATCduino.cmdstation motion.analog-out-00
+net ATCsignals.saveEEprom ATCduino.SaveEEprom motion.digital-out-03

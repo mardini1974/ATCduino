@@ -39,6 +39,7 @@
 byte pos[500]; int p=0;
 
 double kp=37.0,ki=32.0,kd=0.57;
+double home_offset = 4000;
 double input=0, output=0, setpoint=0;
 PID myPID(&input, &output, &setpoint,kp,ki,kd, DIRECT);
 volatile long encoder0Pos = 0;
@@ -99,7 +100,7 @@ void loop(){
     //if(auto1) if(millis() % 3000 == 0) target1=random(2000); // that was for self test with no input from main controller
     if(auto2) if(millis() % 1000 == 0) printPos();
     //if(counting && abs(input-target1)<15) counting=false; 
-    if (homing) Homing(4000);
+    if (homing) Homing(home_offset);
     if(counting &&  (skip++ % 5)==0 ) {pos[p]=encoder0Pos; if(p<499) p++; else counting=false;}
 }
 
@@ -135,10 +136,10 @@ void process_line() {
   case 'D': kd=Serial.parseFloat(); myPID.SetTunings(kp,ki,kd); break;
   case 'I': ki=Serial.parseFloat(); myPID.SetTunings(kp,ki,kd); break;
   case '?': printPos(); break;
-  case 'X': target=Serial.parseInt(); if (0<=target && target<90000)target1 = target ; clearMem(300);Serial.print(abs(target1-encoder0Pos)<inPostionLimit);Serial.print(",");Serial.print(encoder0Pos);Serial.print(",");Serial.print(target1);Serial.print(",");Serial.println(digitalRead (enableRunPin));break;
+  case 'X': target=Serial.parseInt(); if (!homing) if (0<=target && target<90000)target1 = target ; clearMem(300);Serial.print(abs(target1-encoder0Pos)<inPostionLimit);Serial.print(",");Serial.print(encoder0Pos);Serial.print(",");Serial.print(target1);Serial.print(",");Serial.println(digitalRead (enableRunPin));break;
   //case 'T': auto1 = !auto1; break;
   //case 'A': auto2 = !auto2; break;
-  case 'Q': Serial.print("P="); Serial.print(kp); Serial.print(" I="); Serial.print(ki); Serial.print(" foo="); Serial.print(foo);Serial.print(" D="); Serial.println(kd); break;
+  case 'Q': Serial.print(kp); Serial.print(","); Serial.print(ki); Serial.print(",");  Serial.println(kd); break;
   //case 'H': help(); break;
   case 'W': writetoEEPROM(); break;
   case 'K': eedump(); break;
@@ -146,7 +147,7 @@ void process_line() {
   case 'S': for(int i=0; i<p; i++) Serial.println(pos[i]); break;
   //case 'L': station = Serial.parseInt();target1= Stations[station-1]; clearMem(300); break;
   case 'B': Reset();break;
-  case 'M': homing=true;searching=true;break;
+  case 'M': home_offset = Serial.parseFloat();homing=true;searching=true;break;
   case 'N': parsing = true;parselocations();break;
   case 'O': if (abs(target1-encoder0Pos)<inPostionLimit) pistonCmd = true;Serial.println ("Piston On");break;
   case 'J': pistonCmd = false ;Serial.println ("Piston Off");break;
