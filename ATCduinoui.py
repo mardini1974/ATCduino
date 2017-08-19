@@ -58,19 +58,25 @@ class HandlerClass:
 
     def on_SaveEEprom_clicked(self, widget):
         print "Saving to EEprom \n!!!Make sure to use it sparingly to preserve EEprom health\r\n "
+        # refer to ATCduino.hal 'motion.digital-out-03' to check the right pin selection (P.S pin auto reset in ATCduino.py)
+        c = linuxcnc.command()
+        c.set_digital_output(3, 1)
 
     def on_Homing_clicked(self, widget):
         print "ATC cmd: Manual Homing"
+        # refer to ATCduino.hal 'motion.digital-out-01' to check the right pin selection (P.S pin auto reset in ATCduino.py)
         c = linuxcnc.command()
         c.set_digital_output(1, 1)
 
     def on_hal_ATC_piston_clicked(self, widget):
         print "ATC cmd: Manual Piston On"
+        # refer to ATCduino.hal 'motion.digital-out-00' to check the right pin selection (P.S pin auto reset in ATCduino.py)
         c = linuxcnc.command()
         c.set_digital_output(0, 1)
 
 
     def on_Piston_off_clicked(self, widget):
+        # refer to ATCduino.hal 'motion.digital-out-00' to check the right pin selection (P.S pin auto reset in ATCduino.py)
         print "ATC cmd: Manual Piston Off"
         c = linuxcnc.command()
         c.set_digital_output(0, 0)
