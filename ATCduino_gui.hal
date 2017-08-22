@@ -10,4 +10,7 @@ net ATCduino.gui.PID.P ATCduino.PID.P ATCduinoui.hal_spinbutton9-f
 net ATCduino.gui.PID.I ATCduino.PID.I ATCduinoui.hal_spinbutton10-f
 net ATCduino.gui.PID.D ATCduino.PID.D ATCduinoui.hal_spinbutton11-f
 net ATCduino.gui.homeoffset ATCduino.HomeOffset ATCduinoui.hal_spinbutton12-s
+net ATCduino.gui.hspeed ATCduino.hspeed ATCduinoui.hal_spinbutton13-s
+net ATCduino.gui.hoffsetspeed ATCduino.hoffsetspeed ATCduinoui.hal_spinbutton14-s
+net ATCduino.gui.rspeed ATCduino.rspeed ATCduinoui.hal_spinbutton15-s
 

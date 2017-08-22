@@ -39,7 +39,7 @@
 byte pos[500]; int p=0;
 
 double kp=37.0,ki=32.0,kd=0.57;
-double home_offset = 4000;
+double home_offset = 4000,rspeed = 255, hspeed =200,hoffsetspeed =200;
 double input=0, output=0, setpoint=0;
 PID myPID(&input, &output, &setpoint,kp,ki,kd, DIRECT);
 volatile long encoder0Pos = 0;
@@ -85,7 +85,7 @@ void setup() {
   //Setup the pid 
   myPID.SetMode(AUTOMATIC);
   myPID.SetSampleTime(1);
-  myPID.SetOutputLimits(-255,255);
+  myPID.SetOutputLimits(-rspeed,rspeed);
 
 } 
 
@@ -155,6 +155,10 @@ void process_line() {
   case 'F': Serial.println (firmware);break;
   case 'T': Serial.println(digitalRead(homeSensor));break;
   case 'U': Serial.print(abs(target1-encoder0Pos)<inPostionLimit);Serial.print(",");Serial.print(encoder0Pos);Serial.print(",");Serial.print(target1);Serial.print(",");Serial.println(digitalRead (enableRunPin));break;
+  case 'V': hspeed=Serial.parseInt(); break;
+  case 'C': hoffsetspeed=Serial.parseInt(); break;
+  case 'Z': rspeed=Serial.parseInt();myPID.SetOutputLimits(-rspeed,rspeed); break;
+
   //default : Serial.println ("not a command"); break;
  }
  if (!parsing)  while((Serial.read()!=10));parsing = false; // dump extra characters till LF is seen (you can use CRLF or just LF)
@@ -200,16 +204,16 @@ void Homing(int HomeOffset)
  int home_read = 1;
  if(searching) {
   myPID.SetMode(MANUAL);
-  myPID.ComputeM(-100);
+  myPID.ComputeM(-hspeed);
   if (home_invert_read) home_read = !digitalRead(homeSensor) ; else home_read= digitalRead(homeSensor);
-  if (home_read == HIGH) {searching=false;searching1=true;encoder0Pos=0;target1 = HomeOffset;}}
+  if (home_read == HIGH) {myPID.ComputeM(0);delay(1000);searching=false;searching1=true;encoder0Pos=0;target1 = HomeOffset;}}
  if (searching1){
     
     myPID.SetMode(AUTOMATIC);myPID.Compute();
-    myPID.SetOutputLimits(-150,150);
+    myPID.SetOutputLimits(-hoffsetspeed,hoffsetspeed);
     
     if (abs(target1-encoder0Pos)<inPostionLimit) {
-      Reset();myPID.SetOutputLimits(-255,255);searching1=false;homing=false;}
+      Reset();myPID.SetOutputLimits(-rspeed,rspeed);searching1=false;homing=false;}
     }
 }
 void clearMem(int bytes){p=0; counting=true;for(int i=0; i<bytes; i++) pos[i]=0;}

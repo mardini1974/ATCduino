@@ -28,6 +28,12 @@ class HandlerClass:
         self.spin.set_value(float(inifile.find("PID", "ATCD") or 0))
         self.spin = self.builder.get_object("hal_spinbutton12")
         self.spin.set_value(int(inifile.find("HOMING", "OFFSET") or 0))
+        self.spin = self.builder.get_object("hal_spinbutton13")
+        self.spin.set_value(int(inifile.find("HOMING", "HSPEED") or 0))
+        self.spin = self.builder.get_object("hal_spinbutton14")
+        self.spin.set_value(int(inifile.find("HOMING", "HOFFSETSPEED") or 0))
+        self.spin = self.builder.get_object("hal_spinbutton15")
+        self.spin.set_value(int(inifile.find("HOMING", "RSPEED") or 0))
 
     def Save(self, widget, data=None):
 
@@ -52,6 +58,15 @@ class HandlerClass:
         r.set(float(self.spin.get_value()), f)
         r = c.add_option('OFFSET', type='int', keys='HOMING')
         self.spin = self.builder.get_object("hal_spinbutton12")
+        r.set(int(self.spin.get_value()), f)
+        r = c.add_option('HSPEED', type='int', keys='HOMING')
+        self.spin = self.builder.get_object("hal_spinbutton13")
+        r.set(int(self.spin.get_value()), f)
+        r = c.add_option('HOFFSETSPEED', type='int', keys='HOMING')
+        self.spin = self.builder.get_object("hal_spinbutton14")
+        r.set(int(self.spin.get_value()), f)
+        r = c.add_option('RSPEED', type='int', keys='HOMING')
+        self.spin = self.builder.get_object("hal_spinbutton15")
         r.set(int(self.spin.get_value()), f)
 
         f.write(inifile)
