@@ -51,6 +51,9 @@ c.newpin("PID.I",hal.HAL_FLOAT,hal.HAL_IN)
 c.newpin("PID.D",hal.HAL_FLOAT,hal.HAL_IN)
 c.newpin("HomeOffset",hal.HAL_S32,hal.HAL_IN)
 c.newpin("SaveEEprom",hal.HAL_BIT,hal.HAL_IN)
+c.newpin("hspeed",hal.HAL_S32,hal.HAL_IN)
+c.newpin("hoffsetspeed",hal.HAL_S32,hal.HAL_IN)
+c.newpin("rspeed",hal.HAL_S32,hal.HAL_IN)
 
 config = ConfigParser.ConfigParser()
 config.read('ATCduino.ini')
@@ -81,6 +84,10 @@ c["PID.D"] = float(d)
 old_pidp = 0
 old_pidi = 0
 old_pidd = 0
+old_hspeed = 0
+old_hoffsetspeed = 0
+old_rspeed = 0
+
 
 Stations = [0,0,0,0,0,0,0,0]
 try:
@@ -117,6 +124,18 @@ try:
         if c["PID.D"] !=  old_pidd:
             ser.write("d%f\r\n"%c["PID.D"])
             old_pidd = c["PID.D"]
+
+        if c["hspeed"] !=  old_hspeed:
+            ser.write("V%d\r\n"%c["hspeed"])
+            old_hspeed = c["hspeed"]
+
+        if c["hoffsetspeed"] !=  old_hoffsetspeed:
+            ser.write("C%d\r\n"%c["hoffsetspeed"])
+            old_hofffsetspeed = c["hoffsetspeed"]
+
+        if c["rspeed"] !=  old_rspeed:
+            ser.write("Z%d\r\n"%c["rspeed"])
+            old_rspeed = c["rspeed"]
 
         if c.SaveEEprom:
             ser.write("w\r\n")
