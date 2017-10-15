@@ -10,7 +10,7 @@ AccelStepper stepper(AccelStepper::DRIVER,4,7); // Defaults to AccelStepper::DRI
 #define enableRunPin 10
 #define stepperEnable 8
 #define firmware "0.2"//frimware version
-
+bool homesignal;
 bool homed;
 bool homeSearch;
 bool pistonCmd;
@@ -94,7 +94,7 @@ void serialEvent() {
     case 'F': Serial.println (firmware);break;
     case 'O': if (stepper.distanceToGo() == 0) pistonCmd = true;Serial.println ("Piston On");break;
     case 'J': pistonCmd = false ;Serial.println ("Piston Off");break;
-    case 'H': homed = false;homeSearch = false;
+    case 'H': homed = false;homeSearch = false;homesignal= true;break;
     case 'V': Parameter.homeSpeed=Serial.parseInt();break;
     case 'Z': Parameter.homeSearchSpeed = Serial.parseInt();break;
     case 'T': Parameter.homeOffset =Serial.parseInt();break; 
@@ -113,6 +113,7 @@ void loop()
     if (digitalRead(enableRunPin) == 0) stepper.enableOutputs(); else stepper.disableOutputs(); //Can motor run
     if (pistonCmd) digitalWrite (piston,LOW);else digitalWrite (piston,HIGH); //piston control
     if (!homed & !homeSearch){ //not homed and not searching for home
+      if (homesignal) {
       stepper.setSpeed(Parameter.homeSearchSpeed);
       stepper.runSpeed();
       if (digitalRead(homeSensor) == 0) 
@@ -121,7 +122,8 @@ void loop()
         stepper.setCurrentPosition(0);
         stepper.setSpeed(Parameter.homeSpeed);
         homeSearch = true;
-      }}
+        homesignal = false;
+      }}}
       if (!homed & homeSearch){ //not homed yet but seraching is started
         stepper.moveTo(Parameter.homeOffset);
         stepper.run();

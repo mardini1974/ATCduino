@@ -3,6 +3,8 @@
 import serial
 import time,hal,glob
 import struct
+from tkMessageBox import showinfo
+from Tkinter import Tk
 
 def get_bit( inbyte , inbit ):
     return (inbyte & 2**inbit) >> inbit
@@ -10,17 +12,33 @@ def get_bit( inbyte , inbit ):
 
 def updatestatus():
     global ser
+    ser.flushInput()
     ser.write("Q\r\n")
     ser.flush()
     message = ser.read()
     time.sleep(0.1)
     data_left = ser.inWaiting()
     message += ser.read(data_left)
-    if message != '':
-        print ("%2s,Length=%d"%(message.encode("hex"),len(message)))
-
-     fields = struct.unpack('ii',message)
-     return fields
+    #if len(message) <3 :
+    #    fields = [0,0]
+    #print ("%2s,Length=%d"%(message.encode("hex"),len(message)))
+    fields = struct.unpack('ii',message)
+    return fields
+def readParameters():
+    ser.flushInput()
+    ser.write("?\r\n")
+    message = ser.read()
+    time.sleep(0.2)
+    data_left = ser.inWaiting()
+    message += ser.read(data_left)
+    #print ("%s,Length=%d"%(message.encode("hex"),len(message)))
+    accel,homeoffset,homespeed,homesearchspeed,speed = struct.unpack('fllll',message)
+    print "%f"%accel
+    print "%d"%homeoffset
+    print "%d"%homespeed
+    print "%d"%homesearchspeed
+    print "%d"%speed
+    return accel,homeoffset,homespeed,homesearchspeed,speed
 
 def serial_ports():
     ports = glob.glob('/dev/tty[A-Za-z]*')
@@ -41,15 +59,21 @@ def serial_ports():
         except (OSError, serial.SerialException):
             pass
     return result
+def msgBox (title,message):
+    windows =Tk()
+    string = str(message)
+    showinfo(title=title,message= string)
+    windows.wm_withdraw()
 
 c= hal.component("ATCduino")
 #print serial_ports()
-ser = serial.Serial(serial_ports()[0],115200)
-#ser = serial.Serial("/dev/ttyUSB0",115200)
+#ser = serial.Serial(serial_ports()[0],115200)
+ser = serial.Serial("/dev/ttyUSB1",115200)
 #print ser.readline()
 
 c.newpin("piston",hal.HAL_BIT,hal.HAL_IN)
 c.newpin("home",hal.HAL_BIT,hal.HAL_IN)
+c.newpin("homed",hal.HAL_BIT,hal.HAL_IN)
 c.newpin("inposition",hal.HAL_BIT,hal.HAL_OUT)
 c.newpin("Enabled",hal.HAL_BIT,hal.HAL_IN)
 c.newpin("station",hal.HAL_FLOAT,hal.HAL_OUT)
@@ -69,57 +93,40 @@ c.newpin("SaveEEprom",hal.HAL_BIT,hal.HAL_IN)
 c.newpin("hspeed",hal.HAL_S32,hal.HAL_IN)
 c.newpin("hoffsetspeed",hal.HAL_S32,hal.HAL_IN)
 c.newpin("rspeed",hal.HAL_S32,hal.HAL_IN)
+c.newpin("accel",hal.HAL_FLOAT,hal.HAL_IN)
 
-
+time.sleep(3)
 c.ready()
-#ser.writelines ('N1=00000:2=08384:3=16768:4=25152')
-#time.sleep(1)
-#ser.writelines ('N5=33536:6=41920:7=50304:8=58688')
-#time.sleep(1)
 old_piston = False
 old_station = 0
 old_home = False
-inpos='0'
-position = '0'
-enabled = '0'
-cmd = '0'
-p =  '0'
-i = '0'
-d= '0'
-retry = 0
-message = ser.readline()
-ser.write("q\r\n")
-time.sleep(0.1)
-message = ser.readline()
-p,i,d = message.split(",")
-c["PID.P"] = float(p)
-c["PID.I"] = float(i)
-c["PID.D"] = float(d)
-old_pidp = 0
-old_pidi = 0
-old_pidd = 0
 old_hspeed = 0
 old_hoffsetspeed = 0
 old_rspeed = 0
-
-
+old_hoffset =0
+old_command =0
+old_accel = 0.0
 Stations = [0,0,0,0,0,0,0,0]
 try:
     while 1:
-        ser.write("X%s\r\n" % Stations[int(c.cmdstation)])
+        for i in range(0,8):
+            Stations[i] = c["stations.s%d"%(i+1)]
         time.sleep(0.1)
-        message= ser.readline()
-        try:
-            inpos,position,cmd,enabled = message.split(",")
-            for i in range(0,8):
-                Stations[i] = c["stations.s%d"%(i+1)]
-            c['inposition'] = True if inpos.rstrip('\r\n') == "1"  else False
-            c['position']= float(position)
-            c['command']= float(cmd)
-            c['station'] = round(float(position)/8384,0)
-            c['Enabled'] = False if enabled.rstrip('\r\n') == "0"  else True
-        except:
-            pass
+        result = updatestatus()
+        c['inposition'] = True if get_bit(result[0],1) == 1  else False
+        c['position']= result[1]
+        c['station'] = round(float(c['position'])/400,0)
+        c['Enabled'] = False if get_bit(result[0],0) == 0  else True
+        c['homed'] = True if get_bit(result[0],2) == 1 else False
+
+        if c['cmdstation']!= old_command:
+            if c['Enabled'] == False:
+                ser.write("M%s\r\n"%Stations[int(c['cmdstation'])])
+                old_command = c['cmdstation']
+            else:
+                msgBox("Error","Can't move, motor not Enabled")
+
+
         if c["piston"] !=  old_piston:
             if c.piston == True:
                 ser.write("O\r\n")
@@ -127,36 +134,34 @@ try:
                 ser.write("J\r\n")
             old_piston = c["piston"]
 
-        if c["PID.P"] !=  old_pidp:
-            ser.write("p%f\r\n"%c["PID.P"])
-            old_pidp = c["PID.P"]
 
-        if c["PID.I"] !=  old_pidi:
-            ser.write("i%f\r\n"%c["PID.I"])
-            old_pidi = c["PID.I"]
-
-        if c["PID.D"] !=  old_pidd:
-            ser.write("d%f\r\n"%c["PID.D"])
-            old_pidd = c["PID.D"]
 
         if c["hspeed"] !=  old_hspeed:
             ser.write("V%d\r\n"%c["hspeed"])
             old_hspeed = c["hspeed"]
 
+        if c["HomeOffset"] !=  old_hoffset:
+            ser.write("T%d\r\n"%c["HomeOffset"])
+            old_hoffset = c["hspeed"]
+
         if c["hoffsetspeed"] !=  old_hoffsetspeed:
-            ser.write("C%d\r\n"%c["hoffsetspeed"])
+            ser.write("Z%d\r\n"%c["hoffsetspeed"])
             old_hofffsetspeed = c["hoffsetspeed"]
 
         if c["rspeed"] !=  old_rspeed:
-            ser.write("Z%d\r\n"%c["rspeed"])
+            ser.write("S%d\r\n"%c["rspeed"])
             old_rspeed = c["rspeed"]
+
+        if c["accel"] !=  old_accel:
+            ser.write("A%d\r\n"%c["accel"])
+            old_accel = c["accel"]
 
         if c.SaveEEprom:
             ser.write("w\r\n")
             c.SaveEEprom = False
 
         if c.home:
-            ser.write("M%d\r\n"%c["HomeOffset"])
+            ser.write("H%d\r\n")
             print ('Homing')
             c.home= False
 except KeyboardInterrupt:
