@@ -49,14 +49,12 @@ def msgBox (title,message):
     windows.wm_withdraw()
 
 c= hal.component("ATCduino")
-#print serial_ports()
-#ser = serial.Serial(serial_ports()[0],115200)
+#connect to first Usb  serial port
 ser = serial.Serial(serial.tools.list_ports.comports()[0].device,115200)
-#print ser.readline()
 
 c.newpin("piston",hal.HAL_BIT,hal.HAL_IN)
 c.newpin("home",hal.HAL_BIT,hal.HAL_IN)
-c.newpin("homed",hal.HAL_BIT,hal.HAL_IN)
+c.newpin("homed",hal.HAL_BIT,hal.HAL_OUT)
 c.newpin("inposition",hal.HAL_BIT,hal.HAL_OUT)
 c.newpin("Enabled",hal.HAL_BIT,hal.HAL_IN)
 c.newpin("station",hal.HAL_FLOAT,hal.HAL_OUT)
@@ -79,6 +77,13 @@ c.newpin("rspeed",hal.HAL_S32,hal.HAL_IN)
 c.newpin("accel",hal.HAL_FLOAT,hal.HAL_IN)
 
 time.sleep(3)
+ser.flushInput()
+ser.write ("!\r\n")
+time.sleep (0.1)
+message= ser.readline()
+if message.find('ATC')>-1:
+    print ('Found ATC (Auto tool changer) and connecting on port \'%s\''%serial.tools.list_ports.comports()[0].device)
+
 c.ready()
 old_piston = False
 old_station = 0
