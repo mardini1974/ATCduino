@@ -6,6 +6,7 @@ import struct
 from tkMessageBox import showinfo
 from Tkinter import Tk
 
+
 def get_bit( inbyte , inbit ):
     return (inbyte & 2**inbit) >> inbit
 
@@ -47,7 +48,7 @@ def serial_ports():
         try:
             s = serial.Serial(port,115200)
             message= s.readline()
-            time.sleep(0.1)
+            time.sleep(3)
             s.write ("!\r\n")
             time.sleep(0.1)
             message= s.readline()
@@ -111,7 +112,7 @@ try:
     while 1:
         for i in range(0,8):
             Stations[i] = c["stations.s%d"%(i+1)]
-        time.sleep(0.1)
+        time.sleep(0.5)
         result = updatestatus()
         c['inposition'] = True if get_bit(result[0],1) == 1  else False
         c['position']= result[1]
@@ -119,17 +120,24 @@ try:
         c['Enabled'] = False if get_bit(result[0],0) == 0  else True
         c['homed'] = True if get_bit(result[0],2) == 1 else False
 
+
         if c['cmdstation']!= old_command:
             if c['Enabled'] == False:
-                ser.write("M%s\r\n"%Stations[int(c['cmdstation'])])
-                old_command = c['cmdstation']
+                if c['homed'] == True:
+                    ser.write("M%s\r\n"%Stations[int(c['cmdstation'])])
+                    old_command = c['cmdstation']
+                else:
+                    msgBox("Error","Tool changer not homed yet!...")
             else:
-                msgBox("Error","Can't move, motor not Enabled")
+                msgBox("Error","Can't move, motor not Enabled!")
 
 
         if c["piston"] !=  old_piston:
-            if c.piston == True:
-                ser.write("O\r\n")
+            if c["piston"] == True:
+                if c["inposition"]== True :
+                    ser.write("O\r\n")
+                else:
+                    msgBox("Error","Motor is running or not homed..")
             else:
                 ser.write("J\r\n")
             old_piston = c["piston"]
@@ -137,7 +145,7 @@ try:
 
 
         if c["hspeed"] !=  old_hspeed:
-            ser.write("V%d\r\n"%c["hspeed"])
+            ser.write("Z%d\r\n"%c["hspeed"])
             old_hspeed = c["hspeed"]
 
         if c["HomeOffset"] !=  old_hoffset:
@@ -145,7 +153,7 @@ try:
             old_hoffset = c["hspeed"]
 
         if c["hoffsetspeed"] !=  old_hoffsetspeed:
-            ser.write("Z%d\r\n"%c["hoffsetspeed"])
+            ser.write("V%d\r\n"%c["hoffsetspeed"])
             old_hofffsetspeed = c["hoffsetspeed"]
 
         if c["rspeed"] !=  old_rspeed:
@@ -162,6 +170,7 @@ try:
 
         if c.home:
             ser.write("H%d\r\n")
+
             print ('Homing')
             c.home= False
 except KeyboardInterrupt:

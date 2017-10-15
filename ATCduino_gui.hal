@@ -6,9 +6,6 @@ net ATCduino.gui.Stations.5 ATCduino.stations.s5 ATCduinoui.hal_spinbutton5-s
 net ATCduino.gui.Stations.6 ATCduino.stations.s6 ATCduinoui.hal_spinbutton6-s
 net ATCduino.gui.Stations.7 ATCduino.stations.s7 ATCduinoui.hal_spinbutton7-s
 net ATCduino.gui.Stations.8 ATCduino.stations.s8 ATCduinoui.hal_spinbutton8-s
-net ATCduino.gui.PID.P ATCduino.PID.P ATCduinoui.hal_spinbutton9-f
-net ATCduino.gui.PID.I ATCduino.PID.I ATCduinoui.hal_spinbutton10-f
-net ATCduino.gui.PID.D ATCduino.PID.D ATCduinoui.hal_spinbutton11-f
 net ATCduino.gui.homeoffset ATCduino.HomeOffset ATCduinoui.hal_spinbutton12-s
 net ATCduino.gui.hspeed ATCduino.hspeed ATCduinoui.hal_spinbutton13-s
 net ATCduino.gui.hoffsetspeed ATCduino.hoffsetspeed ATCduinoui.hal_spinbutton14-s

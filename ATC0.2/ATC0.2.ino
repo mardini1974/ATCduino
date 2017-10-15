@@ -28,7 +28,7 @@ struct messages{
   //bit 2 homed
   //bit 3 searching
   //bit 4 piston
-  //bit 5 
+  //bit 5 is running
   //bit 6 
   //bit 7 
   long positionCV;
@@ -114,25 +114,26 @@ void loop()
     if (pistonCmd) digitalWrite (piston,LOW);else digitalWrite (piston,HIGH); //piston control
     if (!homed & !homeSearch){ //not homed and not searching for home
       if (homesignal) {
-      stepper.setSpeed(Parameter.homeSearchSpeed);
+      stepper.setSpeed(-Parameter.homeSearchSpeed);
       stepper.runSpeed();
       if (digitalRead(homeSensor) == 0) 
       {
         
         stepper.setCurrentPosition(0);
-        stepper.setSpeed(Parameter.homeSpeed);
+        stepper.setMaxSpeed(Parameter.homeSpeed);
         homeSearch = true;
         homesignal = false;
       }}}
       if (!homed & homeSearch){ //not homed yet but seraching is started
         stepper.moveTo(Parameter.homeOffset);
         stepper.run();
-        if (stepper.distanceToGo() == 0) {homed = true;stepper.setCurrentPosition(0);}
+        if (stepper.distanceToGo() == 0) {homed = true;stepper.setCurrentPosition(0);homesignal = false;}
         
         }
       
       if (homed & homeSearch){ //now get the movemnet commands
       // If at the end of travel go to the other end
+      stepper.setMaxSpeed(Parameter.commandMaxSpeed);
       if (stepper.distanceToGo() == 0)stepper.moveTo(target1);stepper.run();
         }
 
@@ -141,5 +142,6 @@ void loop()
       message.statusByte |= homed <<2;
       message.statusByte |= homeSearch <<3;
       message.statusByte |= pistonCmd <<4;
+      message.statusByte |= stepper.isRunning() <<5;
       message.positionCV = stepper.currentPosition();
 }
