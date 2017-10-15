@@ -5,7 +5,7 @@ import time,hal,glob
 import struct
 from tkMessageBox import showinfo
 from Tkinter import Tk
-
+import serial.tools.list_ports
 
 def get_bit( inbyte , inbit ):
     return (inbyte & 2**inbit) >> inbit
@@ -41,25 +41,7 @@ def readParameters():
     print "%d"%speed
     return accel,homeoffset,homespeed,homesearchspeed,speed
 
-def serial_ports():
-    ports = glob.glob('/dev/tty[A-Za-z]*')
-    result = []
-    for port in ports:
-        try:
-            s = serial.Serial(port,115200)
-            message= s.readline()
-            time.sleep(3)
-            s.write ("!\r\n")
-            time.sleep(0.1)
-            message= s.readline()
-            if message.find('ATC')>-1:
-                result.append(port)
-                print ('Found ATC (Auto tool changer) and connecting on port \'%s\''%port)
-            s.close()
 
-        except (OSError, serial.SerialException):
-            pass
-    return result
 def msgBox (title,message):
     windows =Tk()
     string = str(message)
@@ -69,7 +51,7 @@ def msgBox (title,message):
 c= hal.component("ATCduino")
 #print serial_ports()
 #ser = serial.Serial(serial_ports()[0],115200)
-ser = serial.Serial("/dev/ttyUSB1",115200)
+ser = serial.Serial(serial.tools.list_ports.comports()[0].device,115200)
 #print ser.readline()
 
 c.newpin("piston",hal.HAL_BIT,hal.HAL_IN)
