@@ -2,7 +2,25 @@
 
 import serial
 import time,hal,glob
-import ConfigParser
+import struct
+
+def get_bit( inbyte , inbit ):
+    return (inbyte & 2**inbit) >> inbit
+
+
+def updatestatus():
+    global ser
+    ser.write("Q\r\n")
+    ser.flush()
+    message = ser.read()
+    time.sleep(0.1)
+    data_left = ser.inWaiting()
+    message += ser.read(data_left)
+    if message != '':
+        print ("%2s,Length=%d"%(message.encode("hex"),len(message)))
+
+     fields = struct.unpack('ii',message)
+     return fields
 
 def serial_ports():
     ports = glob.glob('/dev/tty[A-Za-z]*')
@@ -52,8 +70,7 @@ c.newpin("hspeed",hal.HAL_S32,hal.HAL_IN)
 c.newpin("hoffsetspeed",hal.HAL_S32,hal.HAL_IN)
 c.newpin("rspeed",hal.HAL_S32,hal.HAL_IN)
 
-config = ConfigParser.ConfigParser()
-config.read('ATCduino.ini')
+
 c.ready()
 #ser.writelines ('N1=00000:2=08384:3=16768:4=25152')
 #time.sleep(1)
