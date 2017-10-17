@@ -1,11 +1,13 @@
 #!/usr/bin/python
 
 import serial
-import time,hal,glob
+import time
+import hal
 import struct
 from tkMessageBox import showinfo
 from Tkinter import Tk
 import serial.tools.list_ports
+
 
 def get_bit( inbyte , inbit ):
     return (inbyte & 2**inbit) >> inbit
@@ -76,6 +78,7 @@ c.newpin("hoffsetspeed",hal.HAL_S32,hal.HAL_IN)
 c.newpin("rspeed",hal.HAL_S32,hal.HAL_IN)
 c.newpin("accel",hal.HAL_FLOAT,hal.HAL_IN)
 
+
 time.sleep(3)
 ser.flushInput()
 ser.write ("!\r\n")
@@ -115,8 +118,10 @@ try:
                     old_command = c['cmdstation']
                 else:
                     msgBox("Error","Tool changer not homed yet!...")
+                    c['cmdstation'] = old_command
             else:
                 msgBox("Error","Can't move, motor not Enabled!")
+                c['cmdstation'] = old_command
 
 
         if c["piston"] !=  old_piston:
@@ -156,10 +161,15 @@ try:
             c.SaveEEprom = False
 
         if c.home:
-            ser.write("H%d\r\n")
+            if c['Enabled'] == False:
+                ser.write("H%d\r\n")
+                c['cmdstation'] = 0
+                print ('Homing')
 
-            print ('Homing')
+            else:
+                msgBox("Error","Can't move, motor not Enabled!")
             c.home= False
+
 except KeyboardInterrupt:
     pass
 
