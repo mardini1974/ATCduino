@@ -2,7 +2,7 @@
 Automatic tool changer for Linuxcnc with Arduino UNO
 ## INTRO
 ATCduino ( Automatic tool changer arduino ) is tool changer for 8 stations tools using stepper motor control
-The ATC can work as standalone or in conjuction with linuxcnc, commands to the ATC are sent through serial port.
+The ATC can work as standalone or in conjunction with linuxcnc, commands to the ATC are sent through serial port.
 When connected to **Linuxcnc** a remap M6 is essential to make it work
 ## Commands for Standalone 
 through your serial connection to ATCduino send these commands followed by new line:
@@ -33,7 +33,7 @@ through your serial connection to ATCduino send these commands followed by new l
   
  ```
  Due to serial communication some glitches may occur if no command is sent, to overcome 
- this glitches a move command must  be always sent to arduino, to make sure no glitchs will happen.
+ this glitches a move command must  be always sent to Arduino, to make sure no glitches will happen.
  ```
  
 ## Installation for Linuxcnc
@@ -112,7 +112,7 @@ POSTGUI_HALFILE = postgui_list.hal
 ```
 also note instead of calling postgui.hal we replaced it with **postgui_list.hal** to add extra post gui hal files.
 
-**Importatnt note for tool prepare-tool prepared and and tool change - tool changed loop signals
+**Important note for tool prepare-tool prepared and and tool change - tool changed loop signals
 must be available in you hal file refer to core_sim.hal**
 
 ## Usage
@@ -140,24 +140,24 @@ will do the following:
 1. Tool wheel will turn to corresponding pocket (if changed).
 2. Piston will extend to receive the tool.
 3. Return loaded tool to it's pocket.
-4. Disingage tool from spindle.
-5. Safty move away from the tool.
+4. Disengage tool from spindle.
+5. Safety move away from the tool.
 6. Retract piston.
 7. Turning to the new requested tool pocket.
 8. Extend piston.
 9. Move spindle to receive position.
 10. Lock tool in spindle.
 11. Retract piston.
-12. Safty move for spindle, tool is ready.
+12. Safety move for spindle, tool is ready.
 to change order of movement depending on your setup refer to /nc_subroutines/rack_change.ngc for complete usage
 
 ### Manual ATC commands.
-Take extra measures when using manual commands, these commands used when a certain movemnt of ATC needed 
+Take extra measures when using manual commands, these commands used when a certain movement of ATC needed 
 you can do it from 2 places 
 1. from ATC settings screen.
-2. from gcode commands (refer to /nc_subroutines/rack_change.ngc for complete usage)
+2. from G-code commands (refer to /nc_subroutines/rack_change.ngc for complete usage)
 ```
-Turnning wheel
+Turning wheel
 M68 E(analog output) Q(pocket)
 (analog output) refer to ini file section [ATCPINS] to know which analog output motion pin is used
 example:
