@@ -1,8 +1,3 @@
-'''
-    HAL spinbutton
-    demo for Gtk bug workaround
-    see Gladevcp Manual Section FAQ item 6
-'''
 import linuxcnc
 import os, gtk
 import hal
